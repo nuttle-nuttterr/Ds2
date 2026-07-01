@@ -1,0 +1,50 @@
+name: Update Tamil & English IPTV Playlist
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run playlist generator
+        run: python generate_playlist.py
+
+      - name: Configure Git
+        run: git config user.name "github-actions[bot]"
+
+      - name: Configure Git email
+        run: git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Stage files
+        run: git add playlist.m3u README.md
+
+      - name: Check for changes
+        id: check
+        run: echo "CHANGED=$(git diff --staged --quiet || echo 'true')" >> $GITHUB_OUTPUT
+
+      - name: Commit changes
+        if: steps.check.outputs.CHANGED == 'true'
+        run: git commit -m "Auto-update playlist"
+
+      - name: Push changes
+        if: steps.check.outputs.CHANGED == 'true'
+        run: git push
