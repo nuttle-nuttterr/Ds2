@@ -1,23 +1,23 @@
 # 📺 Tamil & English IPTV
 
-**Updated:** 2026-07-01 03:17:11 UTC
+**Updated:** 2026-07-01 09:56:56 UTC
 
-**Live channels:** 173
+**Live channels:** 278
 
 | Category | Channels |
 | --- | --- |
-| Tamil Entertainment | 6 |
-| Tamil News | 6 |
+| Tamil Entertainment | 11 |
+| Tamil News | 9 |
 | Tamil Movies | 7 |
 | Tamil Music | 1 |
 | Tamil Kids | 1 |
-| Tamil Sports | 0 |
-| Tamil Devotional | 9 |
-| Tamil Infotainment | 1 |
+| Tamil Sports | 1 |
+| Tamil Devotional | 10 |
+| Tamil Infotainment | 3 |
 | Tamil Shopping | 0 |
-| Tamil Local | 30 |
-| English Movies | 85 |
-| English News | 27 |
+| Tamil Local | 40 |
+| English Movies | 153 |
+| English News | 42 |
 
 ## Usage
 `https://raw.githubusercontent.com/nuttle-nuttterr/Mk-test-ds/main/playlist.m3u`
