@@ -131,6 +131,28 @@ def parse_m3u(content):
             yield attrs, name, line
             name = None
 
+def validate_stream(url, timeout=5):
+    """
+    Check if the stream URL is reachable and returns a success status.
+    Returns (True, response_time) or (False, None).
+    """
+    try:
+        start = time.time()
+        # Use a GET request with stream=True to only read headers and first few bytes
+        resp = requests.get(url, headers=HEADERS, timeout=timeout, stream=True)
+        # Check if status is 2xx or 3xx (redirects are okay)
+        if 200 <= resp.status_code < 400:
+            # Read a small chunk to ensure data is actually coming
+            chunk = resp.raw.read(1024)
+            resp.close()
+            elapsed = time.time() - start
+            return True, elapsed
+        else:
+            resp.close()
+            return False, None
+    except Exception:
+        return False, None
+
 def fetch_channels(url, default_lang):
     channels = []
     print(f"Fetching {url} ... ", end="")
@@ -146,13 +168,24 @@ def fetch_channels(url, default_lang):
         stream_url = stream_url.strip()
         if not stream_url.startswith("http"):
             continue
+
         lang = detect_language(raw_name)
         if lang is None:
             continue
+
         cat = get_category(raw_name, attrs.get("group-title", ""))
         if cat is None:
             cat = "Tamil Local" if lang == "tamil" else "English Movies"
-        channels.append((cat, attrs, raw_name, stream_url))
+
+        # ---------- VALIDATE THE STREAM ----------
+        print(f"  Testing: {raw_name[:40]}... ", end="")
+        ok, elapsed = validate_stream(stream_url)
+        if ok:
+            print(f"✓ ({elapsed:.2f}s)")
+            channels.append((cat, attrs, raw_name, stream_url))
+        else:
+            print("✗ (dead/slow)")
+
     return channels
 
 def main():
@@ -176,10 +209,13 @@ def main():
 
     total = sum(len(v) for v in output.values())
     if total == 0:
-        print("⚠️ No channels fetched. Restoring previous playlist.")
+        print("⚠️ No valid channels found. Restoring previous playlist.")
         if old_playlist:
             with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
                 f.write(old_playlist)
+        else:
+            with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+                f.write("#EXTM3U\n# No working channels\n")
         return
 
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
