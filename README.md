@@ -1,8 +1,8 @@
 # 📺 Tamil & English IPTV
 
-**Updated:** 2026-07-02 19:44:00 UTC
+**Updated:** 2026-07-03 04:00:17 UTC
 
-**Live channels:** 278
+**Live channels:** 279
 
 | Category | Channels |
 | --- | --- |
@@ -16,7 +16,7 @@
 | Tamil Infotainment | 3 |
 | Tamil Shopping | 0 |
 | Tamil Local | 40 |
-| English Movies | 153 |
+| English Movies | 154 |
 | English News | 42 |
 
 ## Usage
