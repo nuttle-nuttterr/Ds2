@@ -1,6 +1,6 @@
 # 📺 Tamil & English IPTV
 
-**Updated:** 2026-07-03 04:00:17 UTC
+**Updated:** 2026-07-03 09:31:48 UTC
 
 **Live channels:** 279
 
