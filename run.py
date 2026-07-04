@@ -78,7 +78,7 @@ MASTER_LIST = {
     "angel tv": "Tamil Devotional", "murugan tv": "Tamil Devotional", "discovery tamil": "Tamil Infotainment", 
     "sony bbc earth": "Tamil Infotainment", "bbc earth": "Tamil Infotainment", "aastha tamil": "Tamil Local", 
     "kalaignar murasu": "Tamil Local", "madha tv": "Tamil Local", "makkal tv": "Tamil Local", "news 7 tamil": "Tamil Local", 
-    "peppers tv": "Taml Local", "puthiya thalaimurai": "Tamil Local", "tamilan tv": "Tamil Local", "tamilvision-tv": "Tamil Local", 
+    "peppers tv": "Tamil Local", "puthiya thalaimurai": "Tamil Local", "tamilan tv": "Tamil Local", "tamilvision-tv": "Tamil Local", 
     "thanthi one": "Tamil Local", "velicham tv": "Tamil Local", "vijay takkar": "Tamil Local", "afroturk tv": "Tamil Local", 
     "albuk tv": "Tamil Local", "ark tv": "Tamil Local", "baby shark tv": "Tamil Local", "bek news": "Tamil Local", 
     "bek sports": "Tamil Local", "cbs news los angeles": "Tamil Local", "hktv": "Tamil Local", "island luck tv": "Tamil Local", 
@@ -213,7 +213,11 @@ def fetch_channels(url):
         if cat is None:
             cat = "Tamil Local" if lang == "tamil" else "English Movies"
 
-        channels.append((cat, attrs, raw_name, stream_url))
+        # Validate category exists before adding
+        if cat in CATEGORIES:
+            channels.append((cat, attrs, raw_name, stream_url))
+        else:
+            print(f"  ❌ Invalid category: {cat}")
     return channels
 
 def main():
