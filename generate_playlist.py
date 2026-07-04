@@ -2,209 +2,224 @@ import requests
 import re
 import time
 import os
-from collections import OrderedDict
+import concurrent.futures
 
 OUTPUT_FILE = "playlist.m3u"
 BACKUP_FILE = "playlist_backup.m3u"
 
-# Replaced the two hardcoded URLs with your full sources list
-SOURCES = [
-    "https://raw.githubusercontent.com/Vmfm/tamilvmtv/main/live/channels.m3u",
+# General sources - Will ONLY be scanned for the explicit channels in your Master List
+SOURCES_GENERAL = [
     "https://raw.githubusercontent.com/Vmfm/tamilvmtv/main/live/jio.m3u",
     "https://raw.githubusercontent.com/Tamilwebcast/Tamilwebcast.github.io/main/TWCIPTV.m3u",
-    # "https://raw.githubusercontent.com/PraveenBojja83/praveentv/main/resource/channels.json", # Excluded: Requires a custom JSON parser
     "https://raw.githubusercontent.com/Indiblog/india-iptv/main/output/india_iptv.m3u",
     "https://raw.githubusercontent.com/Indiblog/india-iptv/main/output/india_general.m3u",
     "https://raw.githubusercontent.com/amazeyourself/m3u/main/jtv.m3u",
     "https://raw.githubusercontent.com/amazeyourself/m3u/main/pishow.m3u",
     "https://raw.githubusercontent.com/amazeyourself/m3u/main/yupptvfast.m3u",
     "https://raw.githubusercontent.com/amazeyourself/m3u/main/tangotv.m3u",
-    "https://raw.githubusercontent.com/amazeyourself/m3u/main/ashokadigital.m3u",
     "https://raw.githubusercontent.com/amazeyourself/m3u/main/neotv.m3u",
     "https://iptv-org.github.io/iptv/languages/tam.m3u",
     "https://iptv-org.github.io/iptv/languages/eng.m3u"
 ]
 
+# Local sources - Will be scanned for Master List AND accepted as "Tamil Local"
+SOURCES_LOCAL = [
+    "https://raw.githubusercontent.com/Vmfm/tamilvmtv/main/live/channels.m3u",
+    "https://raw.githubusercontent.com/amazeyourself/m3u/main/ashokadigital.m3u",
+    "https://raw.githubusercontent.com/amazeyourself/tamil-local-iptv/refs/heads/main/channels.m3u"
+]
+
 CATEGORIES = [
-    "Tamil Entertainment", "Tamil News", "Tamil Movies", "Tamil Music",
-    "Tamil Kids", "Tamil Sports", "Tamil Devotional", "Tamil Infotainment",
-    "Tamil Shopping", "Tamil Local", "English Movies", "English News"
+    "Tamil - General Entertainment (GEC)", "Tamil - Movies", "Tamil - News", 
+    "Tamil - Comedy", "Tamil - Music", "Tamil - Infotainment & Lifestyle", 
+    "Tamil - Spiritual & Devotional", "Tamil - Kids", "Tamil - Local",
+    "English - General Entertainment (GEC)", "English - Movies", "English - National News", 
+    "English - International News", "English - Business News", "English - Infotainment", 
+    "English - Lifestyle & Travel", "English - Kids", "English - Sports"
 ]
 
-TAMIL_KW = [
-    "tamil", "sun ", "vijay", "kalaignar", "jaya ", "raj ", "captain",
-    "polimer", "mega ", "pudhiya", "thanthi", "vasanth", "isaiaruvi",
-    "k tv", "ktv", "adithya", "chutti", "chithiram", "makkal", "sirippoli",
-    "vendhar", "peppers", "angel", "murugan", "madha", "velicham", "seithigal",
-    "podhigai", "puthiya", "thalaimurai", "sathiyam", "madhimugam",
-    "aruloli", "jeevan", "nambikkai", "shubhsandesh", "aastha"
-]
-
-ENGLISH_KW = [
-    "english", "hbo", "cnn", "bbc", "disney", "discovery", "nat geo",
-    "sony pix", "star movies", "mn+", "hits", "romedy", "comedy central",
-    "axn", "colors infinity", "zee café", "&flix", "&privé", "star world",
-    "fox", "fyi", "tlc", "animal planet", "history tv18", "bloomberg",
-    "movies now", "sky news", "ndtv", "wion", "times now"
-]
-
-BLOCKED = [
-    "telugu", "hindi", "marathi", "malayalam", "kannada", "bengali", "punjabi",
-    "gujarati", "oriya", "assamese", "bhojpuri", "urdu", "sanskrit",
-    "etv", "gemini", "maa tv", "tv9", "zee marathi", "star pravah",
-    "asianet", "kiran", "flowers", "mazhavil", "kairali", "amrita",
-    "sangeet", "b4u", "aaj tak", "sony sab", "sony pal",
-    "star plus", "zee tv", "star utsav", "star gold", "sony max",
-    "dangal", "big magic", "dd national", "dd india", "sony max 2",
-    "colors kannada", "colors bangla", "colors gujarati", "colors marathi"
-]
-
-MASTER_LIST = {
-    # [Kept exactly as your original file to save space, assuming it remains unchanged]
-    "sun tv": "Tamil Entertainment", "star vijay": "Tamil Entertainment", "zee tamil": "Tamil Entertainment", 
-    "colors tamil": "Tamil Entertainment", "kalaignar tv": "Tamil Entertainment", "raj tv": "Tamil Entertainment", 
-    "polimer tv": "Tamil Entertainment", "mega tv": "Tamil Entertainment", "vasanth tv": "Tamil Entertainment", 
-    "puthuyugam tv": "Tamil Entertainment", "captain tv": "Tamil Entertainment", "adithya tv": "Tamil Entertainment", 
-    "vendhar tv": "Tamil Entertainment", "jaya tv": "Tamil Entertainment", "d tamil": "Tamil Entertainment", 
-    "sirippoli": "Tamil Entertainment", "dd tamil": "Tamil Entertainment", "sun news": "Tamil News", 
-    "raj news": "Tamil News", "thanthi tv": "Tamil News", "news18 tamil": "Tamil News", "polimer news": "Tamil News", 
-    "news7 tamil": "Tamil News", "news j": "Tamil News", "kalaignar seithigal": "Tamil News", "win news": "Tamil News", 
-    "sathiyam tv": "Tamil News", "madhimugam tv": "Tamil News", "pudhiya thalaimurai": "Tamil News", 
-    "zee tamil news": "Tamil News", "ktv": "Tamil Movies", "zee thirai": "Tamil Movies", "sun life": "Tamil Movies", 
-    "raj digital plus": "Tamil Movies", "jaya movie": "Tamil Movies", "vijay super": "Tamil Movies", 
-    "j movies": "Tamil Movies", "thirai tv": "Tamil Movies", "boktv": "Tamil Movies", "ducktv": "Tamil Movies", 
-    "ktv 2": "Tamil Movies", "ktv sport": "Tamil Movies", "talktv": "Tamil Movies", "sun music": "Tamil Music", 
-    "raj musix": "Tamil Music", "isaiaruvi": "Tamil Music", "g music": "Tamil Music", "jcv musix": "Tamil Music", 
-    "chutti tv": "Tamil Kids", "chithiram tv": "Tamil Kids", "cartoon network tamil": "Tamil Kids", 
-    "pogo tamil": "Tamil Kids", "nick tamil": "Tamil Kids", "sony yay tamil": "Tamil Kids", "star sports tamil": "Tamil Sports", 
-    "angel tv": "Tamil Devotional", "murugan tv": "Tamil Devotional", "discovery tamil": "Tamil Infotainment", 
-    "sony bbc earth": "Tamil Infotainment", "bbc earth": "Tamil Infotainment", "aastha tamil": "Tamil Local", 
-    "kalaignar murasu": "Tamil Local", "madha tv": "Tamil Local", "makkal tv": "Tamil Local", "news 7 tamil": "Tamil Local", 
-    "peppers tv": "Tamil Local", "puthiya thalaimurai": "Tamil Local", "tamilan tv": "Tamil Local", 
-    "tamilvision-tv": "Tamil Local", "thanthi one": "Tamil Local", "velicham tv": "Tamil Local", "vijay takkar": "Tamil Local", 
-    "afroturk tv": "Tamil Local", "albuk tv": "Tamil Local", "ark tv": "Tamil Local", "baby shark tv": "Tamil Local", 
-    "bek news": "Tamil Local", "bek sports": "Tamil Local", "cbs news los angeles": "Tamil Local", "hktv": "Tamil Local", 
-    "island luck tv": "Tamil Local", "krca-tv": "Tamil Local", "la36": "Tamil Local", "mindanow network tv": "Tamil Local", 
-    "montreal greek tv": "Tamil Local", "ncis: los angeles": "Tamil Local", "spark tv": "Tamil Local", "stryk tv": "Tamil Local", 
-    "the walk tv": "Tamil Local", "cnn": "English News", "bbc news": "English News", "bloomberg": "English News", 
-    "ndtv 24x7": "English News", "wion": "English News", "times now": "English News", "sky news": "English News", 
-    "euronews english": "English News", "fox news": "English News", "africanews english": "English News", 
-    "acnn": "English News", "france 24 english": "English News", "al jazeera english": "English News", 
-    "alarabiya english": "English News", "dw english": "English News", "rt documentary": "English News", 
-    "telesur english": "English News", "ntd tv english": "English News", "bloomberg originals": "English News", 
-    "hbo": "English Movies", "star movies": "English Movies", "sony pix": "English Movies", "mn+": "English Movies", 
-    "&flix": "English Movies", "romedy now": "English Movies", "comedy central": "English Movies", 
-    "disney channel": "English Movies", "disney junior": "English Movies", "disney xd": "English Movies", 
-    "axn": "English Movies", "fox": "English Movies", "bbc america": "English Movies", "bbc food": "English Movies", 
-    "bbc home & garden": "English Movies", "bbc lifestyle": "English Movies", "colors infinity": "English Movies", 
-    "ndtv good times": "English Movies", "ndtv profit": "English Movies", "ndtv lanka": "English Movies", 
-    "3abn": "English Movies", "africa 24 english": "English Movies", "afrolandtv": "English Movies", 
-    "chosen tv english": "English Movies", "god stands": "English Movies", "hope channel": "English Movies", 
-    "ifilm english": "English Movies", "livenow from fox": "English Movies", "logos tv english": "English Movies", 
-    "madani channel english": "English Movies", "marjaeyat tv english": "English Movies", "noursat english": "English Movies", 
-    "peace tv english": "English Movies", "real madrid tv english": "English Movies", "stingray": "English Movies", 
-    "sumtv english": "English Movies", "terra mater wild": "English Movies", "tv brics english": "English Movies", 
-    "tv maná english": "English Movies", "xite hits": "English Movies", "filmbox+": "English Movies"
+# Strict Allowlist: Only these channels will be processed.
+MASTER_MAP = {
+    # Tamil GEC
+    "sun tv": "Tamil - General Entertainment (GEC)", "star vijay": "Tamil - General Entertainment (GEC)", 
+    "zee tamil": "Tamil - General Entertainment (GEC)", "colors tamil": "Tamil - General Entertainment (GEC)", 
+    "kalaignar tv": "Tamil - General Entertainment (GEC)", "jaya tv": "Tamil - General Entertainment (GEC)", 
+    "raj tv": "Tamil - General Entertainment (GEC)", "polimer tv": "Tamil - General Entertainment (GEC)", 
+    "makkal tv": "Tamil - General Entertainment (GEC)", "vasanth tv": "Tamil - General Entertainment (GEC)", 
+    "puthuyugam tv": "Tamil - General Entertainment (GEC)", "mega tv": "Tamil - General Entertainment (GEC)", 
+    "captain tv": "Tamil - General Entertainment (GEC)", "vendhar tv": "Tamil - General Entertainment (GEC)",
+    
+    # Tamil Movies
+    "ktv": "Tamil - Movies", "star vijay super": "Tamil - Movies", "vijay super": "Tamil - Movies",
+    "zee thirai": "Tamil - Movies", "j movie": "Tamil - Movies", "j movies": "Tamil - Movies",
+    "raj digital plus": "Tamil - Movies", "murasu": "Tamil - Movies", "kalaignar murasu": "Tamil - Movies",
+    "mega 24": "Tamil - Movies", "sun action": "Tamil - Movies",
+    
+    # Tamil News
+    "sun news": "Tamil - News", "puthiya thalaimurai": "Tamil - News", "thanthi tv": "Tamil - News", 
+    "news18 tamil nadu": "Tamil - News", "news18 tamil": "Tamil - News", "polimer news": "Tamil - News", 
+    "news7 tamil": "Tamil - News", "sathiyam tv": "Tamil - News", "news j": "Tamil - News", 
+    "jaya plus": "Tamil - News", "kalaignar seithigal": "Tamil - News", "raj news tamil": "Tamil - News", 
+    "captain news": "Tamil - News",
+    
+    # Tamil Comedy
+    "adithya tv": "Tamil - Comedy", "sirippoli": "Tamil - Comedy",
+    
+    # Tamil Music
+    "sun music": "Tamil - Music", "star vijay music": "Tamil - Music", "vijay music": "Tamil - Music",
+    "isaiaruvi": "Tamil - Music", "jaya max": "Tamil - Music", "raj musix tamil": "Tamil - Music", 
+    "mega musiq": "Tamil - Music",
+    
+    # Tamil Infotainment & Lifestyle
+    "sun life": "Tamil - Infotainment & Lifestyle", "discovery tamil": "Tamil - Infotainment & Lifestyle", 
+    "nat geo tamil": "Tamil - Infotainment & Lifestyle", "sony bbc earth tamil": "Tamil - Infotainment & Lifestyle",
+    
+    # Tamil Spiritual & Devotional
+    "madha tv": "Tamil - Spiritual & Devotional", "angel tv": "Tamil - Spiritual & Devotional", 
+    "nambikkai tv": "Tamil - Spiritual & Devotional", "vaanavil": "Tamil - Spiritual & Devotional", 
+    "jothi tv": "Tamil - Spiritual & Devotional", "velicham tv": "Tamil - Spiritual & Devotional", 
+    "sri sankara tv": "Tamil - Spiritual & Devotional", "sri sankara": "Tamil - Spiritual & Devotional",
+    
+    # Tamil Kids
+    "chutti tv": "Tamil - Kids", "etv bal bharat tamil": "Tamil - Kids",
+    
+    # English GEC
+    "zee cafe": "English - General Entertainment (GEC)", "colors infinity": "English - General Entertainment (GEC)", 
+    "comedy central": "English - General Entertainment (GEC)", "disney international hd": "English - General Entertainment (GEC)",
+    "disney international": "English - General Entertainment (GEC)",
+    
+    # English Movies
+    "star movies": "English - Movies", "star movies select": "English - Movies", "sony pix": "English - Movies", 
+    "movies now": "English - Movies", "mnx": "English - Movies", "mn+": "English - Movies", 
+    "&flix": "English - Movies", "&prive hd": "English - Movies", "&prive": "English - Movies", 
+    "romedy now": "English - Movies",
+    
+    # English National News
+    "times now": "English - National News", "republic tv": "English - National News", 
+    "cnn news18": "English - National News", "cnn-news18": "English - National News",
+    "india today": "English - National News", "ndtv 24x7": "English - National News", 
+    "newsx": "English - National News", "mirror now": "English - National News", "wion": "English - National News",
+    
+    # English International News
+    "bbc news": "English - International News", "cnn international": "English - International News", 
+    "al jazeera english": "English - International News", "rt": "English - International News", 
+    "russia today": "English - International News",
+    
+    # English Business News
+    "cnbc tv18": "English - Business News", "cnbc-tv18": "English - Business News", "et now": "English - Business News", 
+    "ndtv profit": "English - Business News",
+    
+    # English Infotainment
+    "discovery channel": "English - Infotainment", "national geographic": "English - Infotainment", 
+    "history tv18": "English - Infotainment", "animal planet": "English - Infotainment", 
+    "sony bbc earth": "English - Infotainment",
+    
+    # English Lifestyle & Travel
+    "tlc": "English - Lifestyle & Travel", "travelxp": "English - Lifestyle & Travel", "goodtimes": "English - Lifestyle & Travel",
+    
+    # English Kids
+    "cartoon network": "English - Kids", "nickelodeon": "English - Kids", "nick": "English - Kids", 
+    "pogo": "English - Kids", "disney channel": "English - Kids", "disney junior": "English - Kids", 
+    "sonic": "English - Kids", "super hungama": "English - Kids", "discovery kids": "English - Kids", 
+    "babytv": "English - Kids",
+    
+    # English Sports
+    "star sports 1": "English - Sports", "star sports 2": "English - Sports", 
+    "star sports select 1": "English - Sports", "star sports select 2": "English - Sports", 
+    "sony sports ten 1": "English - Sports", "sony sports ten 2": "English - Sports", 
+    "sony sports ten 5": "English - Sports", "eurosport": "English - Sports", 
+    "sports18 1": "English - Sports", "sports18 - 1": "English - Sports"
 }
 
-HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+}
 
 def clean_name(raw):
+    """Strips useless tags and resolutions to match clean names in the map."""
     raw = re.sub(r'\s*\[.*?\]\s*', '', raw)
     raw = re.sub(r'\s*\(.*?\)\s*', '', raw)
-    raw = re.sub(r'\s*\b(HD|SD|HEVC|4K|UHD|HDR|Dolby)\b\s*', '', raw, flags=re.I)
+    raw = re.sub(r'\s*\b(HD|SD|FHD|HEVC|4K|UHD|HDR|Dolby|1080p|720p|Premium|IN)\b\s*', '', raw, flags=re.I)
     return ' '.join(raw.split()).strip()
 
-def detect_language(name):
-    n = name.lower()
-    for word in BLOCKED:
-        if word in n:
+def get_category(name_str, is_local_source):
+    clean = clean_name(name_str).lower()
+    
+    # 1. Fast exact match from your provided list
+    if clean in MASTER_MAP:
+        return MASTER_MAP[clean]
+        
+    # 2. Strict boundary match (e.g., matches "Sun TV" but won't accidentally match "Sun TV Telugu")
+    for k, v in MASTER_MAP.items():
+        if re.search(r'\b' + re.escape(k) + r'\b', clean):
+            # Anti-junk heuristic: Ensure it didn't accidentally grab a different regional channel
+            if any(b in clean for b in ("telugu", "kannada", "malayalam", "hindi", "marathi", "bengali")):
+                return None
+            return v
+            
+    # 3. Only accept other channels if they come from the 3 specified Tamil Local repos
+    if is_local_source:
+        if any(b in clean for b in ("telugu", "kannada", "malayalam", "hindi", "marathi", "bengali", "english")):
             return None
-    for kw in TAMIL_KW:
-        if kw in n:
-            return "tamil"
-    for kw in ENGLISH_KW:
-        if kw in n:
-            return "english"
+        return "Tamil - Local"
+        
     return None
 
-def get_category(name, lang, group_title=""):
-    clean = clean_name(name).lower()
-
-    if group_title:
-        gt_lower = group_title.lower()
-        if lang == "tamil" and gt_lower.startswith("tamil"):
-            for cat in CATEGORIES:
-                if cat.lower() == gt_lower:
-                    return cat
-        elif lang == "english" and gt_lower.startswith("english"):
-            for cat in CATEGORIES:
-                if cat.lower() == gt_lower:
-                    return cat
-
-    for master_name, category in MASTER_LIST.items():
-        if master_name in clean or clean in master_name:
-            return category
-
-    if lang == "tamil":
-        if any(k in clean for k in ["news", "seithigal"]): return "Tamil News"
-        if any(k in clean for k in ["movie", "cinema", "thirai"]): return "Tamil Movies"
-        if any(k in clean for k in ["music", "isai"]): return "Tamil Music"
-        if any(k in clean for k in ["kids", "children", "chutti"]): return "Tamil Kids"
-        if any(k in clean for k in ["sport", "cricket", "football"]): return "Tamil Sports"
-        if any(k in clean for k in ["devotional", "spiritual", "angel", "murugan"]): return "Tamil Devotional"
-        if any(k in clean for k in ["infotainment", "discovery", "bbc", "earth"]): return "Tamil Infotainment"
-        return "Tamil Local"
-    else:
-        if "news" in clean:
-            return "English News"
-        return "English Movies"
-
-def parse_m3u(content):
-    lines = content.splitlines()
-    attrs = {}
-    name = None
-    for line in lines:
-        line = line.strip()
-        if line.startswith("#EXTINF"):
-            attrs = {}
-            for match in re.finditer(r'(\S+)="(.*?)"', line):
-                attrs[match.group(1)] = match.group(2)
-            if ',' in line:
-                name = line.rsplit(',', 1)[-1].strip()
-            else:
-                name = None
-        elif line and not line.startswith("#") and name:
-            yield attrs, name, line
-            name = None
-
-def fetch_channels(url):
+def fetch_channels(url, is_local_source=False):
     channels = []
-    print(f"Fetching {url} ... ", end="")
+    print(f"Fetching {url} ... ", end="", flush=True)
     try:
-        resp = requests.get(url, headers=HEADERS, timeout=15)
-        resp.raise_for_status()
-        print("OK")
+        with requests.get(url, headers=HEADERS, timeout=10, stream=True) as resp:
+            resp.raise_for_status()
+            attrs = {}
+            name = None
+            current_cat = None
+            
+            for line in resp.iter_lines(decode_unicode=True):
+                if not line: continue
+                line = line.strip()
+                
+                if line.startswith("#EXTINF"):
+                    name_str = line.rsplit(',', 1)[-1].strip()
+                    category = get_category(name_str, is_local_source)
+                    
+                    if category:
+                        name = name_str
+                        current_cat = category
+                        attrs = {}
+                        for match in re.finditer(r'(\S+)="(.*?)"', line):
+                            attrs[match.group(1)] = match.group(2)
+                    else:
+                        name = None
+
+                elif not line.startswith("#") and name:
+                    if line.startswith("http"):
+                        normalized_name = clean_name(name).lower()
+                        channels.append((line, current_cat, attrs, name, normalized_name))
+                    name = None
+                    
+        print(f"OK (Found {len(channels)} targets)")
     except Exception as e:
         print(f"FAIL ({e})")
-        return channels
-
-    for attrs, raw_name, stream_url in parse_m3u(resp.text):
-        stream_url = stream_url.strip()
-        if not stream_url.startswith("http"):
-            continue
-
-        lang = detect_language(raw_name)
-        if lang is None:
-            continue
-
-        group = attrs.get("group-title", "")
-        cat = get_category(raw_name, lang, group)
-        if cat is None:
-            cat = "Tamil Local" if lang == "tamil" else "English Movies"
-
-        channels.append((cat, attrs, raw_name, stream_url))
+    
     return channels
+
+def get_working_link(channel_group):
+    """
+    Checks all gathered links for a single channel sequentially.
+    Returns the FIRST working link and ignores the rest. 
+    Strict 6-second timeout.
+    """
+    for channel_data in channel_group:
+        url = channel_data[0]
+        try:
+            r = requests.get(url, headers=HEADERS, timeout=6, stream=True)
+            r.close()
+            if r.status_code < 400:
+                return channel_data
+        except Exception:
+            pass
+    return None
 
 def main():
     old_playlist = None
@@ -212,25 +227,49 @@ def main():
         with open(OUTPUT_FILE, "r", encoding="utf-8") as f:
             old_playlist = f.read()
 
-    # Iterate through ALL sources instead of just two hardcoded ones
-    all_channels = []
-    for source in SOURCES:
-        all_channels.extend(fetch_channels(source))
-
-    output = {cat: OrderedDict() for cat in CATEGORIES}
-    seen = set()
+    raw_channels = []
     
-    for cat, attrs, raw_name, url in all_channels:
-        if url in seen:
-            continue
-        seen.add(url)
+    # 1. Fetch General Sources
+    for source in SOURCES_GENERAL:
+        raw_channels.extend(fetch_channels(source, is_local_source=False))
+        
+    # 2. Fetch Tamil Local Sources
+    for source in SOURCES_LOCAL:
+        raw_channels.extend(fetch_channels(source, is_local_source=True))
+
+    # 3. Group URLs by Channel Name (for intelligent deduplication)
+    channels_by_name = {}
+    for ch in raw_channels:
+        normalized_name = ch[4]
+        if normalized_name not in channels_by_name:
+            channels_by_name[normalized_name] = []
+        channels_by_name[normalized_name].append(ch)
+            
+    print(f"\nTotal unique channels to test for broken links: {len(channels_by_name)}")
+    print("Testing streams with 6-second timeout (Checking 50 at a time)...\n")
+
+    # 4. Concurrently check URLs. Find 1 working link per channel.
+    valid_channels = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
+        results = executor.map(get_working_link, channels_by_name.values())
+        for res in results:
+            if res is not None:
+                valid_channels.append(res)
+
+    # 5. Group by final Category and Sort A-Z
+    output = {cat: [] for cat in CATEGORIES}
+    for url, cat, attrs, ch_name, normalized_name in valid_channels:
         new_attrs = dict(attrs)
         new_attrs["group-title"] = cat
-        output[cat][url] = (new_attrs, raw_name)
+        output[cat].append((ch_name, url, new_attrs))
+
+    for cat in output:
+        output[cat].sort(key=lambda x: x[0].lower())
 
     total = sum(len(v) for v in output.values())
+    
     if total == 0:
-        print("⚠️ No valid channels found. Restoring previous playlist.")
+        print("\n⚠️ No valid channels found. Restoring previous playlist.")
         if old_playlist:
             with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
                 f.write(old_playlist)
@@ -239,13 +278,14 @@ def main():
                 f.write("#EXTM3U\n# No working channels\n")
         return
 
+    # 6. Write final M3U
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         f.write("#EXTM3U\n")
         for cat in CATEGORIES:
             if not output[cat]:
                 continue
             f.write(f"\n# --- {cat} ---\n")
-            for url, (attrs, ch_name) in output[cat].items():
+            for ch_name, url, attrs in output[cat]:
                 extinf = '#EXTINF:-1'
                 for k, v in attrs.items():
                     extinf += f' {k}="{v}"'
@@ -256,19 +296,21 @@ def main():
     with open(BACKUP_FILE, "w", encoding="utf-8") as f:
         f.write(open(OUTPUT_FILE).read())
 
-    print(f"\n✅ Playlist created: {total} live channels")
+    print(f"\n✅ Playlist created: {total} live working channels")
     for cat in CATEGORIES:
         if output[cat]:
             print(f"  {cat}: {len(output[cat])}")
 
+    # 7. Write README stats - Updated target location to your Ds2 repo
     with open("README.md", "w", encoding="utf-8") as f:
         f.write("# 📺 Tamil & English IPTV\n\n")
         f.write(f"**Updated:** {time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime())}\n\n")
-        f.write(f"**Live channels:** {total}\n\n")
+        f.write(f"**Live, Working Channels:** {total}\n\n")
         f.write("| Category | Channels |\n| --- | --- |\n")
         for cat in CATEGORIES:
-            f.write(f"| {cat} | {len(output[cat])} |\n")
-        f.write("\n## Usage\n`https://raw.githubusercontent.com/nuttle-nuttterr/Mk-test-ds/main/playlist.m3u`\n")
+            if output[cat]:
+                f.write(f"| {cat} | {len(output[cat])} |\n")
+        f.write("\n## Usage\n`https://raw.githubusercontent.com/nuttle-nuttterr/Ds2/main/playlist.m3u`\n")
 
 if __name__ == "__main__":
     main()
