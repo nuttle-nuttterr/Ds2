@@ -78,7 +78,7 @@ MASTER_LIST = {
     "angel tv": "Tamil Devotional", "murugan tv": "Tamil Devotional", "discovery tamil": "Tamil Infotainment", 
     "sony bbc earth": "Tamil Infotainment", "bbc earth": "Tamil Infotainment", "aastha tamil": "Tamil Local", 
     "kalaignar murasu": "Tamil Local", "madha tv": "Tamil Local", "makkal tv": "Tamil Local", "news 7 tamil": "Tamil Local", 
-    "peppers tv": "Tamil Local", "puthiya thalaimurai": "Tamil Local", "tamilan tv": "Tamil Local", "tamilvision-tv": "Tamil Local", 
+    "peppers tv": "Taml Local", "puthiya thalaimurai": "Tamil Local", "tamilan tv": "Tamil Local", "tamilvision-tv": "Tamil Local", 
     "thanthi one": "Tamil Local", "velicham tv": "Tamil Local", "vijay takkar": "Tamil Local", "afroturk tv": "Tamil Local", 
     "albuk tv": "Tamil Local", "ark tv": "Tamil Local", "baby shark tv": "Tamil Local", "bek news": "Tamil Local", 
     "bek sports": "Tamil Local", "cbs news los angeles": "Tamil Local", "hktv": "Tamil Local", "island luck tv": "Tamil Local", 
@@ -175,6 +175,14 @@ def parse_m3u(content):
             yield attrs, name, line
             name = None
 
+def check_url_validity(url):
+    """Check if URL is accessible with 8-second timeout"""
+    try:
+        response = requests.head(url, headers=HEADERS, timeout=8, allow_redirects=True)
+        return response.status_code == 200
+    except:
+        return False
+
 def fetch_channels(url):
     channels = []
     print(f"Fetching {url} ... ", end="")
@@ -189,6 +197,11 @@ def fetch_channels(url):
     for attrs, raw_name, stream_url in parse_m3u(resp.text):
         stream_url = stream_url.strip()
         if not stream_url.startswith("http"):
+            continue
+
+        # Check URL validity before adding
+        if not check_url_validity(stream_url):
+            print(f"  ❌ Offline: {clean_name(raw_name)}")
             continue
 
         lang = detect_language(raw_name)
