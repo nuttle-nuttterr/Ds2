@@ -4,15 +4,14 @@ import time
 import os
 from collections import OrderedDict
 
-OUTPUT_FILE = "playlist.m3u"
+OUTPUT_FILE = "master_playlist.m3u"
 BACKUP_FILE = "playlist_backup.m3u"
 
-# Replaced the two hardcoded URLs with your full sources list
+# All your sources
 SOURCES = [
     "https://raw.githubusercontent.com/Vmfm/tamilvmtv/main/live/channels.m3u",
     "https://raw.githubusercontent.com/Vmfm/tamilvmtv/main/live/jio.m3u",
     "https://raw.githubusercontent.com/Tamilwebcast/Tamilwebcast.github.io/main/TWCIPTV.m3u",
-    # "https://raw.githubusercontent.com/PraveenBojja83/praveentv/main/resource/channels.json", # Excluded: Requires a custom JSON parser
     "https://raw.githubusercontent.com/Indiblog/india-iptv/main/output/india_iptv.m3u",
     "https://raw.githubusercontent.com/Indiblog/india-iptv/main/output/india_general.m3u",
     "https://raw.githubusercontent.com/amazeyourself/m3u/main/jtv.m3u",
@@ -60,7 +59,6 @@ BLOCKED = [
 ]
 
 MASTER_LIST = {
-    # [Kept exactly as your original file to save space, assuming it remains unchanged]
     "sun tv": "Tamil Entertainment", "star vijay": "Tamil Entertainment", "zee tamil": "Tamil Entertainment", 
     "colors tamil": "Tamil Entertainment", "kalaignar tv": "Tamil Entertainment", "raj tv": "Tamil Entertainment", 
     "polimer tv": "Tamil Entertainment", "mega tv": "Tamil Entertainment", "vasanth tv": "Tamil Entertainment", 
@@ -80,20 +78,19 @@ MASTER_LIST = {
     "angel tv": "Tamil Devotional", "murugan tv": "Tamil Devotional", "discovery tamil": "Tamil Infotainment", 
     "sony bbc earth": "Tamil Infotainment", "bbc earth": "Tamil Infotainment", "aastha tamil": "Tamil Local", 
     "kalaignar murasu": "Tamil Local", "madha tv": "Tamil Local", "makkal tv": "Tamil Local", "news 7 tamil": "Tamil Local", 
-    "peppers tv": "Tamil Local", "puthiya thalaimurai": "Tamil Local", "tamilan tv": "Tamil Local", 
-    "tamilvision-tv": "Tamil Local", "thanthi one": "Tamil Local", "velicham tv": "Tamil Local", "vijay takkar": "Tamil Local", 
-    "afroturk tv": "Tamil Local", "albuk tv": "Tamil Local", "ark tv": "Tamil Local", "baby shark tv": "Tamil Local", 
-    "bek news": "Tamil Local", "bek sports": "Tamil Local", "cbs news los angeles": "Tamil Local", "hktv": "Tamil Local", 
-    "island luck tv": "Tamil Local", "krca-tv": "Tamil Local", "la36": "Tamil Local", "mindanow network tv": "Tamil Local", 
-    "montreal greek tv": "Tamil Local", "ncis: los angeles": "Tamil Local", "spark tv": "Tamil Local", "stryk tv": "Tamil Local", 
-    "the walk tv": "Tamil Local", "cnn": "English News", "bbc news": "English News", "bloomberg": "English News", 
-    "ndtv 24x7": "English News", "wion": "English News", "times now": "English News", "sky news": "English News", 
-    "euronews english": "English News", "fox news": "English News", "africanews english": "English News", 
-    "acnn": "English News", "france 24 english": "English News", "al jazeera english": "English News", 
-    "alarabiya english": "English News", "dw english": "English News", "rt documentary": "English News", 
-    "telesur english": "English News", "ntd tv english": "English News", "bloomberg originals": "English News", 
-    "hbo": "English Movies", "star movies": "English Movies", "sony pix": "English Movies", "mn+": "English Movies", 
-    "&flix": "English Movies", "romedy now": "English Movies", "comedy central": "English Movies", 
+    "peppers tv": "Tamil Local", "puthiya thalaimurai": "Tamil Local", "tamilan tv": "Tamil Local", "tamilvision-tv": "Tamil Local", 
+    "thanthi one": "Tamil Local", "velicham tv": "Tamil Local", "vijay takkar": "Tamil Local", "afroturk tv": "Tamil Local", 
+    "albuk tv": "Tamil Local", "ark tv": "Tamil Local", "baby shark tv": "Tamil Local", "bek news": "Tamil Local", 
+    "bek sports": "Tamil Local", "cbs news los angeles": "Tamil Local", "hktv": "Tamil Local", "island luck tv": "Tamil Local", 
+    "krca-tv": "Tamil Local", "la36": "Tamil Local", "mindanow network tv": "Tamil Local", "montreal greek tv": "Tamil Local", 
+    "ncis: los angeles": "Tamil Local", "spark tv": "Tamil Local", "stryk tv": "Tamil Local", "the walk tv": "Tamil Local", 
+    "cnn": "English News", "bbc news": "English News", "bloomberg": "English News", "ndtv 24x7": "English News", 
+    "wion": "English News", "times now": "English News", "sky news": "English News", "euronews english": "English News", 
+    "fox news": "English News", "africanews english": "English News", "acnn": "English News", "france 24 english": "English News", 
+    "al jazeera english": "English News", "alarabiya english": "English News", "dw english": "English News", 
+    "rt documentary": "English News", "telesur english": "English News", "ntd tv english": "English News", 
+    "bloomberg originals": "English News", "hbo": "English Movies", "star movies": "English Movies", "sony pix": "English Movies", 
+    "mn+": "English Movies", "&flix": "English Movies", "romedy now": "English Movies", "comedy central": "English Movies", 
     "disney channel": "English Movies", "disney junior": "English Movies", "disney xd": "English Movies", 
     "axn": "English Movies", "fox": "English Movies", "bbc america": "English Movies", "bbc food": "English Movies", 
     "bbc home & garden": "English Movies", "bbc lifestyle": "English Movies", "colors infinity": "English Movies", 
@@ -267,8 +264,9 @@ def main():
         f.write(f"**Live channels:** {total}\n\n")
         f.write("| Category | Channels |\n| --- | --- |\n")
         for cat in CATEGORIES:
-            f.write(f"| {cat} | {len(output[cat])} |\n")
-        f.write("\n## Usage\n`https://raw.githubusercontent.com/nuttle-nuttterr/Mk-test-ds/main/playlist.m3u`\n")
+            if output[cat]:
+                f.write(f"| {cat} | {len(output[cat])} |\n")
+        f.write("\n## Usage\n`https://raw.githubusercontent.com/nuttle-nuttterr/Mk-test-ds/main/master_playlist.m3u`\n")
 
 if __name__ == "__main__":
     main()
