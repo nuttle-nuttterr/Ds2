@@ -1,6 +1,6 @@
 # 📺 Tamil & English IPTV
 
-**Updated:** 2026-07-04 03:19:28 UTC
+**Updated:** 2026-07-04 03:24:32 UTC
 
 **Live channels:** 1322
 
@@ -19,4 +19,4 @@
 | English News | 82 |
 
 ## Usage
-`https://raw.githubusercontent.com/nuttle-nuttterr/Mk-test-ds/main/master_playlist.m3u`
+`https://raw.githubusercontent.com/nuttle-nuttterr/Ds2/main/master_playlist.m3u`
