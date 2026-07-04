@@ -27,7 +27,7 @@ jobs:
         run: pip install requests
 
       - name: Run playlist generator
-        run: python generate_playlist.py
+        run: python run.py
 
       - name: Commit and Push changes
         run: |
@@ -35,7 +35,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
           # Stage all generated files
-          git add playlist.m3u playlist_backup.m3u README.md
+          git add master_playlist.m3u playlist_backup.m3u README.md
           
           # Check for changes and commit
           if ! git diff --staged --quiet; then
