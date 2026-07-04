@@ -45,30 +45,33 @@ MASTER_MAP = {
     "zee tamil": "Tamil - General Entertainment (GEC)", "colors tamil": "Tamil - General Entertainment (GEC)", 
     "kalaignar tv": "Tamil - General Entertainment (GEC)", "jaya tv": "Tamil - General Entertainment (GEC)", 
     "raj tv": "Tamil - General Entertainment (GEC)", "polimer tv": "Tamil - General Entertainment (GEC)", 
-    "makkal tv": "Tamil - General Entertainment (GEC)", "vasanth tv": "Tamil - General Entertainment (GEC)", 
-    "puthuyugam tv": "Tamil - General Entertainment (GEC)", "mega tv": "Tamil - General Entertainment (GEC)", 
-    "captain tv": "Tamil - General Entertainment (GEC)", "vendhar tv": "Tamil - General Entertainment (GEC)",
+    "makkal tv": "Tamil - General Entertainment (GEC)", "makkal": "Tamil - General Entertainment (GEC)",
+    "vasanth tv": "Tamil - General Entertainment (GEC)", "puthuyugam tv": "Tamil - General Entertainment (GEC)", 
+    "mega tv": "Tamil - General Entertainment (GEC)", "captain tv": "Tamil - General Entertainment (GEC)", 
+    "vendhar tv": "Tamil - General Entertainment (GEC)", "dd tamil": "Tamil - General Entertainment (GEC)",
     
     # Tamil Movies
     "ktv": "Tamil - Movies", "star vijay super": "Tamil - Movies", "vijay super": "Tamil - Movies",
     "zee thirai": "Tamil - Movies", "j movie": "Tamil - Movies", "j movies": "Tamil - Movies",
     "raj digital plus": "Tamil - Movies", "murasu": "Tamil - Movies", "kalaignar murasu": "Tamil - Movies",
-    "mega 24": "Tamil - Movies", "sun action": "Tamil - Movies",
+    "mega 24": "Tamil - Movies", "sun action": "Tamil - Movies", "thirai tv": "Tamil - Movies",
     
     # Tamil News
-    "sun news": "Tamil - News", "puthiya thalaimurai": "Tamil - News", "thanthi tv": "Tamil - News", 
-    "news18 tamil nadu": "Tamil - News", "news18 tamil": "Tamil - News", "polimer news": "Tamil - News", 
-    "news7 tamil": "Tamil - News", "sathiyam tv": "Tamil - News", "news j": "Tamil - News", 
-    "jaya plus": "Tamil - News", "kalaignar seithigal": "Tamil - News", "raj news tamil": "Tamil - News", 
-    "captain news": "Tamil - News",
+    "sun news": "Tamil - News", "puthiya thalaimurai": "Tamil - News", "puthiya": "Tamil - News",
+    "thanthi tv": "Tamil - News", "news18 tamil nadu": "Tamil - News", "news18 tamil": "Tamil - News", 
+    "news18 tamil nadu nw18": "Tamil - News", "polimer news": "Tamil - News", 
+    "news7 tamil": "Tamil - News", "news7": "Tamil - News", "sathiyam tv": "Tamil - News", 
+    "news j": "Tamil - News", "jaya plus": "Tamil - News", "kalaignar seithigal": "Tamil - News", 
+    "raj news tamil": "Tamil - News", "captain news": "Tamil - News", "mathimugam": "Tamil - News",
+    "malai murasu": "Tamil - News", "win news": "Tamil - News",
     
     # Tamil Comedy
-    "adithya tv": "Tamil - Comedy", "sirippoli": "Tamil - Comedy",
+    "adithya tv": "Tamil - Comedy", "sirippoli": "Tamil - Comedy", "siripoli": "Tamil - Comedy",
     
     # Tamil Music
     "sun music": "Tamil - Music", "star vijay music": "Tamil - Music", "vijay music": "Tamil - Music",
     "isaiaruvi": "Tamil - Music", "jaya max": "Tamil - Music", "raj musix tamil": "Tamil - Music", 
-    "mega musiq": "Tamil - Music",
+    "mega musiq": "Tamil - Music", "jcv musix": "Tamil - Music",
     
     # Tamil Infotainment & Lifestyle
     "sun life": "Tamil - Infotainment & Lifestyle", "discovery tamil": "Tamil - Infotainment & Lifestyle", 
@@ -81,7 +84,32 @@ MASTER_MAP = {
     "sri sankara tv": "Tamil - Spiritual & Devotional", "sri sankara": "Tamil - Spiritual & Devotional",
     
     # Tamil Kids
-    "chutti tv": "Tamil - Kids", "etv bal bharat tamil": "Tamil - Kids",
+    "chutti tv": "Tamil - Kids", "etv bal bharat tamil": "Tamil - Kids", "chithiram tv": "Tamil - Kids",
+    
+    # Tamil Local (Extended from your provided M3U)
+    "sana tv": "Tamil - Local", "sana plus": "Tamil - Local", "utv": "Tamil - Local", 
+    "ntv": "Tamil - Local", "surya tv": "Tamil - Local", "subin tv": "Tamil - Local", 
+    "moon tv": "Tamil - Local", "sakthi tv": "Tamil - Local", "prime tv": "Tamil - Local", 
+    "d tv": "Tamil - Local", "tdn": "Tamil - Local", "7 green": "Tamil - Local", 
+    "yet tv": "Tamil - Local", "pr tv": "Tamil - Local", "riya tv": "Tamil - Local", 
+    "dark tv": "Tamil - Local", "harin tv": "Tamil - Local", "phoenix tv": "Tamil - Local", 
+    "roja tv": "Tamil - Local", "nila tv": "Tamil - Local", "smcv tv": "Tamil - Local", 
+    "aps tv": "Tamil - Local", "aps gold": "Tamil - Local", "mtv men": "Tamil - Local", 
+    "msn tv": "Tamil - Local", "veerali tv": "Tamil - Local", "three star tv": "Tamil - Local", 
+    "shalini tv": "Tamil - Local", "jcv tv": "Tamil - Local", "thendral tv": "Tamil - Local", 
+    "anbu tv": "Tamil - Local", "nellai tv": "Tamil - Local", "a3e0b02f": "Tamil - Local", 
+    "akash tv": "Tamil - Local", "apple tv": "Tamil - Local", "jeyson tv": "Tamil - Local", 
+    "jj max": "Tamil - Local", "jc tv": "Tamil - Local", "digital tv": "Tamil - Local", 
+    "oscar tv": "Tamil - Local", "jeyan tv": "Tamil - Local", "vidyal tv": "Tamil - Local", 
+    "kcn tv": "Tamil - Local", "sky tv": "Tamil - Local", "boys tv": "Tamil - Local", 
+    "king tv": "Tamil - Local", "udhayam tv": "Tamil - Local", "tn tv": "Tamil - Local", 
+    "senthamil tv": "Tamil - Local", "karur tv": "Tamil - Local", "karur city": "Tamil - Local", 
+    "tmp hls20": "Tamil - Local", "bharathi tv": "Tamil - Local", "irattipaathai tv": "Tamil - Local", 
+    "mcn tv": "Tamil - Local", "stn tv": "Tamil - Local", "suriyan tv": "Tamil - Local", 
+    "eesan tv": "Tamil - Local", "68b001a0": "Tamil - Local", "jeyam tv": "Tamil - Local", 
+    "aadhavan tv colours": "Tamil - Local", "solai tv": "Tamil - Local", "mm tv jeyam plus": "Tamil - Local", 
+    "eet live eet tv": "Tamil - Local", "zionmediait 97484f5ce6da96e496a9b87c439835d0": "Tamil - Local",
+    "zionmediait": "Tamil - Local", "thalaa tv tam": "Tamil - Local",
     
     # English GEC
     "zee cafe": "English - General Entertainment (GEC)", "colors infinity": "English - General Entertainment (GEC)", 
@@ -301,7 +329,7 @@ def main():
         if output[cat]:
             print(f"  {cat}: {len(output[cat])}")
 
-    # 7. Write README stats - Updated target location to your Ds2 repo
+    # 7. Write README stats - Targeting Ds2
     with open("README.md", "w", encoding="utf-8") as f:
         f.write("# 📺 Tamil & English IPTV\n\n")
         f.write(f"**Updated:** {time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime())}\n\n")
