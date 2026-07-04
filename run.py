@@ -266,7 +266,7 @@ def main():
         for cat in CATEGORIES:
             if output[cat]:
                 f.write(f"| {cat} | {len(output[cat])} |\n")
-        f.write("\n## Usage\n`https://raw.githubusercontent.com/nuttle-nuttterr/Mk-test-ds/main/master_playlist.m3u`\n")
+        f.write("\n## Usage\n`https://raw.githubusercontent.com/nuttle-nuttterr/Ds2/main/master_playlist.m3u`\n")
 
 if __name__ == "__main__":
     main()
