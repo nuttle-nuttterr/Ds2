@@ -7,7 +7,6 @@ import concurrent.futures
 # ==========================================
 # 1. USER'S CUSTOM HARDCODED CHANNELS
 # ==========================================
-# These channels bypass the strict dictionary filter and are directly injected!
 USER_CUSTOM_CHANNELS = """
 #EXTINF:-1 group-title="local channels",Sana TV
 https://galaxyott.live/hls/sanatv.m3u8
@@ -228,20 +227,38 @@ SOURCES = [
     "https://iptv-org.github.io/iptv/languages/eng.m3u"
 ]
 
+# Specifically restricted to ONLY your preferred sources for local channels
 LOCAL_SOURCES = [
-    "https://raw.githubusercontent.com/Vmfm/tamilvmtv/main/live/channels.m3u",
-    "https://raw.githubusercontent.com/amazeyourself/m3u/main/ashokadigital.m3u",
-    "https://raw.githubusercontent.com/amazeyourself/tamil-local-iptv/refs/heads/main/channels.m3u"
+    "https://raw.githubusercontent.com/Vmfm/tamilvmtv/main/live/channels.m3u"
 ]
 
 # ==========================================
-# 3. STRICT CATEGORY WHITELIST
+# 3. STRICT CATEGORY WHITELIST & ORDERING
 # ==========================================
+CATEGORY_ORDER = [
+    "local channels",
+    "tamil iptv channels",
+    "Tamil Local Channels",
+    "Tamil GEC",
+    "Tamil Movies",
+    "Tamil News",
+    "Tamil Comedy",
+    "Tamil Music",
+    "Tamil Infotainment",
+    "Tamil Spiritual",
+    "Tamil Kids",
+    "English GEC",
+    "English Movies",
+    "English National News",
+    "English International News",
+    "English Business News",
+    "English Infotainment",
+    "English Lifestyle",
+    "English Kids",
+    "Sports"
+]
+
 CATEGORIES = {
-    # ---------------- USER CUSTOM CATEGORIES ----------------
-    "local channels": [], 
-    "tamil iptv channels": [],
-    
     # ---------------- TAMIL ----------------
     "Tamil GEC": ["sun tv", "star vijay", "vijay tv", "zee tamil", "colors tamil", "kalaignar tv", "kalaignar", "jaya tv", "raj tv", "polimer tv", "makkal tv", "vasanth tv", "vasanth", "puthuyugam tv", "puthuyugam", "mega tv", "captain tv", "vendhar tv", "vendhar"],
     "Tamil Movies": ["ktv", "star vijay super", "vijay super", "zee thirai", "j movie", "jaya movie", "raj digital plus", "murasu", "mega 24", "sun action"],
@@ -269,34 +286,44 @@ CATEGORIES = {
     "Tamil Local Channels": ["local", "cable", "arun", "network"]
 }
 
+# Strict filter to immediately reject foreign language feeds from polluting the categories
+BLOCKED_WORDS = ["bangla", "telugu", "hindi", "marathi", "malayalam", "kannada", "bengali", "punjabi", "gujarati", "bhojpuri", "urdu", "oriya", "assamese", "arabic", "spanish", "french"]
+
+
 # ==========================================
 # 4. CORE FUNCTIONS
 # ==========================================
 def clean_name(name):
+    """Removes basic brackets for display."""
     name = re.sub(r'\s*\[.*?\]\s*', '', name)
     name = re.sub(r'\s*\(.*?\)\s*', '', name)
     return ' '.join(name.split()).strip()
 
-def normalize_name(name):
-    name = re.sub(r'\b(HD|SD|FHD|4K|UHD)\b', '', name, flags=re.I)
-    name = re.sub(r'[^a-zA-Z0-9]', '', name)
-    return name.lower()
+def get_core_name(name):
+    """
+    Creates a strict "Core Name" to perfectly deduplicate identical channels.
+    Example: 'Sun TV HD' -> 'suntv'
+    """
+    n = re.sub(r'\s*\[.*?\]\s*', '', name)
+    n = re.sub(r'\s*\(.*?\)\s*', '', n)
+    n = re.sub(r'\b(HD|SD|FHD|4K|UHD|1080p|720p|Premium|IN)\b', '', n, flags=re.I)
+    n = re.sub(r'[^a-zA-Z0-9]', '', n)
+    return n.lower()
 
 def get_category(name):
-    if not name: return None, None
+    """Determines the category and immediately rejects blocked languages."""
+    if not name: return None
     n = name.lower()
     
-    # Strict language boundary check: instantly drop other regional feeds (e.g., Star Sports 1 Hindi)
-    if any(lang in n for lang in ["telugu", "hindi", "marathi", "malayalam", "kannada", "bengali", "bangla", "punjabi", "gujarati", "bhojpuri", "urdu", "oriya", "assamese"]):
-        return None, None
+    # 1. Strict Language Block (Instantly drops "KTV Bangla", "Star Sports Hindi", etc.)
+    if any(b in n for b in BLOCKED_WORDS):
+        return None
         
+    # 2. Match Category
     for cat, keywords in CATEGORIES.items():
-        if cat in ["local channels", "tamil iptv channels"]:
-            continue
-        for kw in keywords:
-            if kw in n: 
-                return cat, kw
-    return None, None
+        if any(kw in n for kw in keywords): 
+            return cat
+    return None
 
 def parse_m3u(content):
     channels = []
@@ -331,32 +358,48 @@ def parse_json(content):
     except Exception: pass
     return channels
 
-def deep_stream_check(item):
-    orig_name, logo, url, cat, dedup_id = item
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+def check_stream_group(channel_group):
+    """
+    Takes all duplicate links for the SAME channel (e.g., 5 links for Sun TV).
+    Tests them sequentially with strict criteria. Keeps the FIRST working one and discards the rest.
+    """
+    headers = {
+        'User-Agent': 'VLC/3.0.16 LibVLC/3.0.16', # Use VLC agent to bypass basic blocks
+        'Accept': '*/*'
+    }
     
-    if "local" in cat.lower() or "custom" in cat.lower() or cat.lower() == "tamil iptv channels":
-        return item
-        
-    try:
-        response = requests.get(url, headers=headers, timeout=6.0, stream=True)
-        if response.status_code == 200:
-            chunk = response.raw.read(1024, decode_content=True)
-            if not chunk:
-                return None
+    for item in channel_group:
+        orig_name, logo, url, cat = item
+        try:
+            response = requests.get(url, headers=headers, timeout=5.0, stream=True)
+            if response.status_code == 200:
+                content_type = response.headers.get('Content-Type', '').lower()
                 
-            text_chunk = chunk.decode('utf-8', errors='ignore').lower()
-            
-            if '<html' in text_chunk or '<!doctype' in text_chunk:
-                return None
-                
-            if '.m3u8' in url.lower():
-                if '#extm3u' not in text_chunk and '#ext-x' not in text_chunk:
-                    return None
+                # Instantly reject fake streams returning HTML web pages
+                if 'text/html' in content_type:
+                    continue
                     
-            return item
-    except Exception:
-        pass
+                chunk = response.raw.read(1024, decode_content=True)
+                if not chunk:
+                    continue
+                    
+                text_chunk = chunk.decode('utf-8', errors='ignore').lower()
+                
+                # Secondary deep-check to ensure it's not a blocked access webpage
+                if '<html' in text_chunk or '<!doctype' in text_chunk or '<body' in text_chunk:
+                    continue
+                    
+                # If it claims to be an m3u8 playlist, verify it actually has playlist tags
+                if '.m3u8' in url.lower():
+                    if '#extm3u' not in text_chunk and '#ext-x' not in text_chunk:
+                        continue
+                        
+                # If it passes all tests, return the first working item immediately!
+                return item
+        except Exception:
+            pass
+            
+    # If NO links in the group work, return None (Channel is fully dead)
     return None
 
 # ==========================================
@@ -365,11 +408,9 @@ def deep_stream_check(item):
 def main():
     print("Starting Strictly Categorized, Sorted, & Fast Playlist Builder...")
     
-    final_channels = {cat: [] for cat in CATEGORIES.keys()}
-    final_seen_names = set()
+    # Track channels perfectly grouped by their exact "Core Name"
+    grouped_channels = {} 
     seen_urls = set()
-    total_added = 0
-    to_check = []
 
     # --- INJECT USER CUSTOM CHANNELS FIRST ---
     print("\nParsing User Custom Channels...")
@@ -380,15 +421,12 @@ def main():
         seen_urls.add(url)
         
         cat = custom_cat if custom_cat else "tamil iptv channels"
-        if cat not in final_channels:
-            final_channels[cat] = []
-            
         clean_n = clean_name(name)
-        norm_name = normalize_name(name)
+        core_n = get_core_name(name)
         
-        # Local/Custom categories track uniqueness by their actual name string
-        dedup_id = f"{cat}_{norm_name}"
-        to_check.append((clean_n, logo, url, cat, dedup_id))
+        if core_n not in grouped_channels:
+            grouped_channels[core_n] = []
+        grouped_channels[core_n].append((clean_n, logo, url, cat))
 
     # --- GRAB FROM REMOTE SOURCES ---
     for src_url in SOURCES:
@@ -402,7 +440,7 @@ def main():
                 url = url.strip()
                 if not url.startswith("http") or url in seen_urls: continue
                 
-                cat, matched_kw = get_category(name)
+                cat = get_category(name)
                 if not cat: continue 
                 
                 if cat == "Tamil Local Channels" and src_url not in LOCAL_SOURCES:
@@ -410,32 +448,33 @@ def main():
                 
                 seen_urls.add(url)
                 clean_n = clean_name(name)
-                norm_name = normalize_name(name)
+                core_n = get_core_name(name)
                 
-                # If curated channel, tie deduplication strictly to the filter keyword match
-                if cat in ["Tamil Local Channels", "local channels", "tamil iptv channels"]:
-                    dedup_id = f"{cat}_{norm_name}"
-                else:
-                    dedup_id = f"{cat}_{matched_kw}"
+                if core_n not in grouped_channels:
+                    grouped_channels[core_n] = []
+                grouped_channels[core_n].append((clean_n, logo, url, cat))
                 
-                to_check.append((clean_n, logo, url, cat, dedup_id))
         except Exception:
             pass
 
-    print(f"\n-> Testing {len(to_check)} streams (Max 6s timeout)...")
+    print(f"\n-> Testing {len(grouped_channels)} Unique Channels for broken links...")
+    print("   (Duplicates have been grouped and bad languages blocked)\n")
     
-    # --- MULTITHREADED CHECKING ---
+    final_channels = {cat: [] for cat in CATEGORY_ORDER}
+    total_added = 0
+    
+    # --- MULTITHREADED CHECKING (1 Group = 1 Unique Channel) ---
+    groups_to_check = list(grouped_channels.values())
+    
     with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
-        results = executor.map(deep_stream_check, to_check)
+        results = executor.map(check_stream_group, groups_to_check)
         for res in results:
             if res:
-                orig_name, logo, url, cat, dedup_id = res
-                
-                # Enforce absolute unique mapping per channel profile assignment
-                if dedup_id not in final_seen_names:
-                    final_seen_names.add(dedup_id)
-                    final_channels[cat].append((orig_name, logo, url))
-                    total_added += 1
+                orig_name, logo, url, cat = res
+                if cat not in final_channels:
+                    final_channels[cat] = []
+                final_channels[cat].append((orig_name, logo, url))
+                total_added += 1
 
     # ==========================================
     # 6. SORTING A-Z & FILE GENERATION
@@ -445,8 +484,9 @@ def main():
         f.write("#EXTM3U\n")
         f.write("#PLAYLIST:Checked by CODECS.COM M3U Checker\n")
         
-        for cat in CATEGORIES.keys():
-            channels = final_channels[cat]
+        # Iterate based on strict predefined CATEGORY_ORDER
+        for cat in CATEGORY_ORDER:
+            channels = final_channels.get(cat, [])
             if channels:
                 channels.sort(key=lambda x: x[0].lower())
                 f.write(f"\n# --- {cat} ---\n")
@@ -458,11 +498,11 @@ def main():
     timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
     
     # ---------------------------------------------------------
-    # README UPDATE - With Inline Code Backticks for perfectly clean URL
+    # README UPDATE
     # ---------------------------------------------------------
     with open("README.md", "w", encoding="utf-8") as f:
         f.write("# Tamil & English IPTV Playlist\n\n")
-        f.write("This playlist is automatically checked, filtered, A-Z sorted, deduplicated, and updated every 6 hours.\n\n")
+        f.write("This playlist is automatically checked, filtered, perfectly ordered, A-Z sorted, deduplicated, and updated every 6 hours.\n\n")
         f.write(f"**Total LIVE Channels:** {total_added}\n**Last Updated:** {timestamp}\n\n")
         
         f.write("## 📥 Playlist URL\n")
@@ -471,8 +511,8 @@ def main():
         f.write("`https://raw.githubusercontent.com/nuttle-nuttterr/Mk-tholaikaatchi-test/main/master_playlist.m3u`\n\n")
         
         f.write("## 📊 Channel Breakdown\n| Category | Count |\n|---|---|\n")
-        for cat in CATEGORIES.keys():
-            channels = final_channels[cat]
+        for cat in CATEGORY_ORDER:
+            channels = final_channels.get(cat, [])
             if channels:
                 f.write(f"| {cat} | {len(channels)} |\n")
 
