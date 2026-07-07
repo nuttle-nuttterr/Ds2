@@ -1,20 +1,20 @@
 # 📺 Tamil & English IPTV
 
-**Updated:** 2026-07-07 14:27:58 UTC
+**Updated:** 2026-07-07 19:52:20 UTC
 
-**Live, Working Channels:** 668
+**Live, Working Channels:** 624
 
 | Category | Channels |
 | --- | --- |
 | Tamil - General Entertainment (GEC) | 16 |
 | Tamil - Movies | 11 |
-| Tamil - News | 12 |
+| Tamil - News | 9 |
 | Tamil - Comedy | 2 |
 | Tamil - Music | 4 |
 | Tamil - Infotainment & Lifestyle | 2 |
 | Tamil - Spiritual & Devotional | 11 |
 | Tamil - Kids | 3 |
-| Tamil - Local | 564 |
+| Tamil - Local | 523 |
 | English - General Entertainment (GEC) | 2 |
 | English - Movies | 6 |
 | English - National News | 14 |
