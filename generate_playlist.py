@@ -87,4 +87,68 @@ def test_link(channel_data):
         try:
             r = requests.get(url, headers=HEADERS, timeout=10, stream=True, allow_redirects=True)
             if r.status_code == 200:
-                content = next
+                content = next(r.iter_content(1024), b'')
+                r.close()
+                if len(content) > 100: # dead links often return 0 bytes
+                    return channel_data + (r.elapsed.total_seconds(),) # add speed
+            r.close()
+        except:
+            pass
+        time.sleep(1)
+    return None
+
+def main():
+    old_playlist = open(OUTPUT_FILE, encoding="utf-8").read() if os.path.exists(OUTPUT_FILE) else None
+
+    raw_channels = []
+    for s in SOURCES_GENERAL: raw_channels.extend(fetch_channels(s, False))
+    for s in SOURCES_LOCAL: raw_channels.extend(fetch_channels(s, True))
+
+    # Dedupe by name, keep all URLs to test
+    channels_by_name = {}
+    for ch in raw_channels:
+        channels_by_name.setdefault(ch[4], []).append(ch)
+
+    print(f"\nTesting {len(channels_by_name)} unique channels with 10s timeout...\n")
+
+    valid_channels = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=30) as executor:
+        for name, group in channels_by_name.items():
+            # test all URLs for this channel, take fastest working one
+            results = list(executor.map(test_link, group))
+            working = [r for r in results if r]
+            if working:
+                best = min(working, key=lambda x: x[5]) # fastest
+                valid_channels.append(best[:5]) # drop speed
+
+    output = {cat: [] for cat in CATEGORIES}
+    seen_urls = set()
+    for url, cat, attrs, ch_name, norm in valid_channels:
+        if url in seen_urls: continue # global dedupe
+        seen_urls.add(url)
+        attrs["group-title"] = cat
+        output[cat].append((ch_name, url, attrs))
+
+    for cat in output: output[cat].sort(key=lambda x: x[0].lower())
+    total = sum(len(v) for v in output.values())
+
+    if total == 0 and old_playlist:
+        print("No channels found. Restoring backup.")
+        open(OUTPUT_FILE, "w", encoding="utf-8").write(old_playlist)
+        return
+
+    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+        f.write("#EXTM3U\n")
+        for cat in CATEGORIES:
+            if output[cat]:
+                f.write(f"\n# --- {cat} ---\n")
+                for ch_name, url, attrs in output[cat]:
+                    extinf = '#EXTINF:-1 ' + ' '.join([f'{k}="{v}"' for k,v in attrs.items()]) + f',{ch_name}'
+                    f.write(extinf + '\n' + url + '\n')
+
+    open(BACKUP_FILE, "w", encoding="utf-8").write(open(OUTPUT_FILE).read())
+    print(f"\n✅ {total} LIVE Tamil + English channels")
+    for cat in CATEGORIES:
+        if output[cat]: print(f" {cat}: {len(output[cat])}")
+
+if __name__ == "__main__": main()
