@@ -295,3 +295,34 @@ def main():
 
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         f.write("#EXTM3U\n")
+        for cat in CATEGORIES:
+            if not output[cat]:
+                continue
+            f.write(f"\n# --- {cat} ---\n")
+            for ch_name, url, attrs in output[cat]:
+                extinf = '#EXTINF:-1'
+                for k, v in attrs.items():
+                    extinf += f' {k}="{v}"'
+                extinf += f',{ch_name}'
+                f.write(extinf + '\n')
+                f.write(url + '\n')
+
+    with open(BACKUP_FILE, "w", encoding="utf-8") as f:
+        f.write(open(OUTPUT_FILE).read())
+
+    print(f"\n✅ Playlist created: {total} live working Tamil + English channels")
+    for cat in CATEGORIES:
+        if output[cat]:
+            print(f" {cat}: {len(output[cat])}")
+
+    with open("README.md", "w", encoding="utf-8") as f:
+        f.write("# 📺 Tamil & English IPTV\n\n")
+        f.write(f"**Updated:** {time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime())}\n\n")
+        f.write(f"**Live, Working Channels:** {total}\n\n")
+        f.write("| Category | Channels |\n| --- | --- |\n")
+        for cat in CATEGORIES:
+            if output[cat]:
+                f.write(f"| {cat} | {len(output[cat])} |\n")
+
+if __name__ == "__main__":
+    main()
