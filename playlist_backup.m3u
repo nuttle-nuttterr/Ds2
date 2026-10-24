@@ -143,8 +143,6 @@ http://omtv.7starcloud.com:1935/omtv/live/live.m3u8
 https://account21.livebox.co.in/oscartvhls/live.m3u8
 #EXTINF:-1 tvg-id="ParamsTV2" tvg-name-ta="பரம்ஸ் டிவி" tvg-logo="https://livetv.ashokadigital.net/upload/logo/1777263574_params%202.png" tvg-region="Unknown" group-title="Tamil - Local",Params TV
 http://shreeparams.7starcloud.com:1935/live/paramstv/live.m3u8
-#EXTINF:-1 tvg-id="PenielTV" tvg-name-ta="பெனியேல் சர்ச் டிவி" tvg-logo="https://play-lh.googleusercontent.com/nGUr3mUAO4e7D2vhu9qgfQYUHSttDW_WoYXyqbQ3njxq0XILcNhkcHXXNt0LPv1FvrY" tvg-region="Chennai" group-title="Tamil - Local",Peniel Church TV
-http://indiamatrix.in/penieltv/penieltv.m3u8
 #EXTINF:-1 tvg-id="PolimerChannel" tvg-name-ta="டிவி" tvg-logo="https://play-lh.googleusercontent.com/DiZsLeRIoky2i4qkkR36SF7R5MR_fwb0Hl41U3wAlVZsi1wKMBxbK3fzvln8YUQrmbkV" tvg-region="Salem" group-title="Tamil - Local",Polimer Channel
 http://polimer.7starcloud.com:1935/polimer/live/live.m3u8
 #EXTINF:-1 tvg-id="PowerOfPrayerTV" tvg-name-ta="பவர் ஆப் பிரேயர் டிவி" tvg-logo="https://play-lh.googleusercontent.com/95zEHpwwpIjcUc6jPO1Fm5tPaNCdbBiluf4WD9q9AybB0n7O3mOy8mgbPAFZfcOgpUZWIO-xS14vwUiDF3rBwg" tvg-region="Unknown" group-title="Tamil - Local",Power Of Prayer TV
@@ -189,8 +187,6 @@ http://122.165.249.163:8080/hls/supertv/index.m3u8
 https://stream.ottlive.co.in/suryatvtamil/index.m3u8
 #EXTINF:-1 tvg-id="TamilStarTV" tvg-name-ta="டிவி" tvg-logo="https://raw.githubusercontent.com/amazeyourself/tamil-local-iptv/refs/heads/main/logos/TamilStarTV.png" tvg-region="Salem" group-title="Tamil - Local",Tamil Star TV
 http://acv.7starcloud.com:1935/tamilstar/tv/playlist.m3u8
-#EXTINF:-1 tvg-id="TamilTVChristian" tvg-name-ta="தமிழ் டிவி" tvg-logo="https://play-lh.googleusercontent.com/PJHDTNvh3wCegYAMs4TL0zYiszRQsGE3rvR1OF5i13RY3EOOKKdrHuXpL_KcWk6Ezg" tvg-region="Unknown" group-title="Tamil - Local",Tamil TV
-https://ktismaservers.in:3220/hybrid/play.m3u8
 #EXTINF:-1 tvg-id="TamilVisionInternational" tvg-name-ta="தமிழ் விஷன் இன்டர்நேஷனல்" tvg-logo="https://i.imgur.com/wJeELGj.png" tvg-region="Canada" group-title="Tamil - Local",Tamil Vision International
 https://live.cmr24.fm/TVI/HD/playlist.m3u8
 #EXTINF:-1 tvg-id="TCBN" tvg-name-ta="TCBN டிவி" tvg-logo="https://tvchannel.in/wp-content/uploads/2025/04/tcbn-300x169.png" tvg-region="Unknown" group-title="Tamil - Local",TCBN
@@ -213,6 +209,8 @@ https://kali.vdopanel.com:3169/stream/play.m3u8
 http://cdn.utvtamil.in/utvkovai/utv/playlist.m3u8
 #EXTINF:-1 tvg-id="VaanamTV" tvg-name-ta="வானம் டிவி" tvg-logo="" tvg-region="Sri Lanka" group-title="Tamil - Local",Vaanam TV
 https://lanka.vaanam24.com:3712/hybrid/play.m3u8
+#EXTINF:-1 tvg-id="VaaniVisuals" tvg-name-ta="டிவி" tvg-logo="https://livetv.ashokadigital.net/upload/logo/1749032751_vaani%20bbb.png" tvg-region="Chekkanurani;Madurai" group-title="Tamil - Local",Vaani Visuals
+https://vaanivisualsin.proxy.nellaiiptv.com/vaanitv/vaanitv/index.m3u8
 #EXTINF:-1 tvg-id="VanavilTV" tvg-name-ta="டிவி" tvg-logo="https://livetv.ashokadigital.net/upload/logo/1738324014_vanavil%20w%20stroke%20copy.png" tvg-region="Kallakurichi" group-title="Tamil - Local",Vanavil TV
 https://ktismaservers.in:3879/live/vanaviltvlive.m3u8
 #EXTINF:-1 tvg-id="VDSTV" tvg-name-ta="VDS டிவி" tvg-logo="https://livetv.ashokadigital.net/upload/logo/1787038089_WhatsApp%20Image%202026-08-17%20at%207.49.21%20PM.jpeg" tvg-region="Tiruvetipuram;Tiruvannamalai" group-title="Tamil - Local",VDS TV
